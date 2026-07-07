@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Супер Змейка</title>
+    <title>Змейка с Настройками</title>
     <style>
         body {
             background-color: #1a1a1a;
@@ -18,7 +18,8 @@
         }
         .stats-container {
             display: flex;
-            gap: 30px;
+            justify-content: space-between;
+            width: 400px;
             margin-bottom: 15px;
             font-size: 20px;
             font-weight: bold;
@@ -26,27 +27,90 @@
             padding: 10px 20px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            box-sizing: border-box;
         }
-        .stat-box span {
-            color: #4caf50;
-        }
-        #highScoreBox span {
-            color: #ffeb3b;
-        }
-        #levelBox span {
-            color: #00bcd4;
+        .stat-box span { color: #4caf50; }
+        #levelBox span { color: #00bcd4; }
+        #highScoreBox span { color: #ffeb3b; }
+
+        .game-container {
+            position: relative;
+            width: 412px;
+            height: 412px;
         }
         canvas {
             border: 6px solid #333;
             background-color: #111;
             border-radius: 10px;
             box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: absolute;
+            top: 0;
+            left: 0;
         }
+        
+        /* Стили для меню и экрана паузы */
+        .overlay {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 400px;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .overlay h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 32px;
+            color: #4caf50;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .overlay button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4);
+        }
+        .overlay button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        .slider-container {
+            margin-bottom: 25px;
+            text-align: center;
+            width: 80%;
+        }
+        .slider-container label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 16px;
+            color: #bbb;
+        }
+        .slider-container input {
+            width: 100%;
+            cursor: pointer;
+        }
+
         .controls-hint {
             margin-top: 15px;
             color: #888;
             font-size: 14px;
+            text-align: center;
+            line-height: 1.5;
         }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -57,9 +121,30 @@
         <div class="stat-box" id="highScoreBox">Рекорд: <span id="highScore">0</span></div>
     </div>
 
-    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div class="game-container">
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        
+        <!-- Главное меню -->
+        <div id="mainMenu" class="overlay">
+            <h2>Змейка</h2>
+            <div class="slider-container">
+                <label id="speedLabel">Начальная скорость: Обычная (100%)</label>
+                <input type="range" id="speedSlider" min="1" max="5" value="3">
+            </div>
+            <button id="startBtn">Играть</button>
+        </div>
+
+        <!-- Экран Паузы -->
+        <div id="pauseMenu" class="overlay hidden">
+            <h2>Пауза</h2>
+            <button id="resumeBtn">Продолжить</button>
+        </div>
+    </div>
     
-    <div class="controls-hint">Управляй стрелочками на клавиатуре</div>
+    <div class="controls-hint">
+        Управление: <b>Стрелочки</b><br>
+        Пауза / Старт: <b>Пробел</b>
+    </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
@@ -67,6 +152,13 @@
         const scoreElement = document.getElementById("score");
         const levelElement = document.getElementById("level");
         const highScoreElement = document.getElementById("highScore");
+        
+        const mainMenu = document.getElementById("mainMenu");
+        const pauseMenu = document.getElementById("pauseMenu");
+        const startBtn = document.getElementById("startBtn");
+        const resumeBtn = document.getElementById("resumeBtn");
+        const speedSlider = document.getElementById("speedSlider");
+        const speedLabel = document.getElementById("speedLabel");
 
         const gridSize = 20;
         const tileCount = canvas.width / gridSize;
@@ -81,13 +173,33 @@
         let highScore = localStorage.getItem("snakeHighScore") || 0;
         highScoreElement.innerText = highScore;
 
-        let baseSpeed = 120; // Стартовая скорость (чем меньше число, тем быстрее)
+        let baseSpeed = 120; 
         let gameTimeout;
         let isChangingDirection = false;
+        let isGameRunning = false;
+        let isPaused = false;
+
+        // Названия для ползунка скоростей
+        const speedNames = {
+            1: "Очень медленная (50%)",
+            2: "Медленная (75%)",
+            3: "Обычная (100%)",
+            4: "Быстрая (125%)",
+            5: "Хардкор (150%)"
+        };
+        // Значения задержки в мс (меньше = быстрее)
+        const speedValues = { 1: 200, 2: 150, 3: 120, 4: 90, 5: 60 };
+
+        speedSlider.addEventListener("input", () => {
+            speedLabel.innerText = `Начальная скорость: ${speedNames[speedSlider.value]}`;
+            baseSpeed = speedValues[speedSlider.value];
+        });
 
         function main() {
+            if (!isGameRunning || isPaused) return;
+
             if (hasGameEnded()) {
-                alert(`Игра окончена!\nТвой счёт: ${score}\nДостигнут уровень: ${level}`);
+                alert(`Игра окончена!\nТвой счёт: ${score}\nУровень: ${level}`);
                 resetGame();
                 return;
             }
@@ -98,8 +210,8 @@
             moveSnake();
             drawSnake();
 
-            // Рассчитываем скорость в зависимости от уровня (ускоряем на 10мс за уровень)
-            let currentSpeed = Math.max(40, baseSpeed - (level - 1) * 10);
+            // Скорость растет с уровнями (каждый уровень уменьшает задержку на 8мс)
+            let currentSpeed = Math.max(30, baseSpeed - (level - 1) * 8);
             gameTimeout = setTimeout(main, currentSpeed);
         }
 
@@ -107,7 +219,6 @@
             ctx.fillStyle = "#111";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Легкая сетка на фоне для красоты
             ctx.strokeStyle = "#1a1a1a";
             ctx.lineWidth = 1;
             for (let i = 0; i < tileCount; i++) {
@@ -124,7 +235,6 @@
 
         function drawSnake() {
             snake.forEach((part, index) => {
-                // Голова змеи чуть светлее тела
                 ctx.fillStyle = index === 0 ? "#66bb6a" : "#4caf50";
                 ctx.fillRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2);
             });
@@ -135,18 +245,17 @@
             snake.unshift(head);
 
             if (head.x === food.x && head.y === food.y) {
-                score += 10;
+                score += 1; // Счёт по 1 очку
                 scoreElement.innerText = score;
                 
-                // Проверка и обновление рекорда
                 if (score > highScore) {
                     highScore = score;
                     highScoreElement.innerText = highScore;
                     localStorage.setItem("snakeHighScore", highScore);
                 }
 
-                // Повышение уровня каждые 50 очков (5 съеденных яблок)
-                let newLevel = Math.floor(score / 50) + 1;
+                // Новый уровень каждые 5 очков
+                let newLevel = Math.floor(score / 5) + 1;
                 if (newLevel !== level) {
                     level = newLevel;
                     levelElement.innerText = level;
@@ -161,8 +270,6 @@
         function generateFood() {
             food.x = Math.floor(Math.random() * tileCount);
             food.y = Math.floor(Math.random() * tileCount);
-            
-            // Чтобы еда не появилась внутри змейки
             for (let part of snake) {
                 if (part.x === food.x && part.y === food.y) {
                     generateFood();
@@ -172,7 +279,7 @@
         }
 
         function drawFood() {
-            ctx.fillStyle = "#e91e63"; // Розовато-красное яблоко
+            ctx.fillStyle = "#e91e63";
             ctx.beginPath();
             let centerX = food.x * gridSize + gridSize/2;
             let centerY = food.y * gridSize + gridSize/2;
@@ -181,23 +288,24 @@
         }
 
         function hasGameEnded() {
-            // Врезался в хвост
             for (let i = 4; i < snake.length; i++) {
                 if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
             }
-            // Врезался в стены
-            const hitLeftWall = snake[0].x < 0;
-            const hitRightWall = snake[0].x >= tileCount;
-            const hitTopWall = snake[0].y < 0;
-            const hitBottomWall = snake[0].y >= tileCount;
-
-            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
+            return snake[0].x < 0 || snake[0].x >= tileCount || snake[0].y < 0 || snake[0].y >= tileCount;
         }
 
         function changeDirection(event) {
-            if (isChangingDirection) return; // Защита от слишком быстрых нажатий
-
             const keyPressed = event.keyCode;
+
+            // Пауза на Пробел (код 32)
+            if (keyPressed === 32) {
+                event.preventDefault();
+                if (isGameRunning) togglePause();
+                return;
+            }
+
+            if (isChangingDirection || !isGameRunning || isPaused) return;
+
             const goingUp = dy === -1;
             const goingDown = dy === 1;
             const goingRight = dx === 1;
@@ -207,6 +315,26 @@
             if (keyPressed === 38 && !goingDown) { dx = 0; dy = -1; isChangingDirection = true; }
             if (keyPressed === 39 && !goingLeft) { dx = 1; dy = 0; isChangingDirection = true; }
             if (keyPressed === 40 && !goingUp) { dx = 0; dy = 1; isChangingDirection = true; }
+        }
+
+        function togglePause() {
+            if (!isGameRunning) return;
+            isPaused = !isPaused;
+            if (isPaused) {
+                pauseMenu.classList.remove("hidden");
+                clearTimeout(gameTimeout);
+            } else {
+                pauseMenu.classList.add("hidden");
+                main();
+            }
+        }
+
+        function startGame() {
+            mainMenu.classList.add("hidden");
+            isGameRunning = true;
+            isPaused = false;
+            baseSpeed = speedValues[speedSlider.value];
+            main();
         }
 
         function resetGame() {
@@ -219,12 +347,18 @@
             level = 1;
             scoreElement.innerText = score;
             levelElement.innerText = level;
-            main();
+            isGameRunning = false;
+            isPaused = false;
+            mainMenu.classList.remove("hidden");
+            clearCanvas();
         }
 
+        startBtn.addEventListener("click", startGame);
+        resumeBtn.addEventListener("click", togglePause);
         document.addEventListener("keydown", changeDirection);
-        // Запуск игры
-        main();
+
+        // Первичный экран
+        clearCanvas();
     </script>
 </body>
 </html>
