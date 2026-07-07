@@ -2,38 +2,71 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Игра Змейка</title>
+    <title>Супер Змейка</title>
     <style>
         body {
-            background-color: #111;
+            background-color: #1a1a1a;
             color: white;
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
+            overflow: hidden;
+        }
+        .stats-container {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            background: #2a2a2a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .stat-box span {
+            color: #4caf50;
+        }
+        #highScoreBox span {
+            color: #ffeb3b;
+        }
+        #levelBox span {
+            color: #00bcd4;
         }
         canvas {
-            border: 4px solid #fff;
-            background-color: #000;
+            border: 6px solid #333;
+            background-color: #111;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
-        #score {
-            font-size: 24px;
-            margin-bottom: 20px;
+        .controls-hint {
+            margin-top: 15px;
+            color: #888;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
 
-    <div id="score">Счёт: 0</div>
+    <div class="stats-container">
+        <div class="stat-box">Счёт: <span id="score">0</span></div>
+        <div class="stat-box" id="levelBox">Уровень: <span id="level">1</span></div>
+        <div class="stat-box" id="highScoreBox">Рекорд: <span id="highScore">0</span></div>
+    </div>
+
     <canvas id="gameCanvas" width="400" height="400"></canvas>
+    
+    <div class="controls-hint">Управляй стрелочками на клавиатуре</div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
+        const levelElement = document.getElementById("level");
+        const highScoreElement = document.getElementById("highScore");
 
         const gridSize = 20;
         const tileCount = canvas.width / gridSize;
@@ -42,34 +75,58 @@
         let food = {x: 5, y: 5};
         let dx = 1;
         let dy = 0;
+        
         let score = 0;
-        let gameSpeed = 100;
-        let gameInterval;
+        let level = 1;
+        let highScore = localStorage.getItem("snakeHighScore") || 0;
+        highScoreElement.innerText = highScore;
+
+        let baseSpeed = 120; // Стартовая скорость (чем меньше число, тем быстрее)
+        let gameTimeout;
+        let isChangingDirection = false;
 
         function main() {
             if (hasGameEnded()) {
-                alert("Игра окончена! Твой счёт: " + score);
+                alert(`Игра окончена!\nТвой счёт: ${score}\nДостигнут уровень: ${level}`);
                 resetGame();
                 return;
             }
 
+            isChangingDirection = false;
             clearCanvas();
             drawFood();
             moveSnake();
             drawSnake();
+
+            // Рассчитываем скорость в зависимости от уровня (ускоряем на 10мс за уровень)
+            let currentSpeed = Math.max(40, baseSpeed - (level - 1) * 10);
+            gameTimeout = setTimeout(main, currentSpeed);
         }
 
         function clearCanvas() {
-            ctx.fillStyle = "#000";
+            ctx.fillStyle = "#111";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Легкая сетка на фоне для красоты
+            ctx.strokeStyle = "#1a1a1a";
+            ctx.lineWidth = 1;
+            for (let i = 0; i < tileCount; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * gridSize, 0);
+                ctx.lineTo(i * gridSize, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * gridSize);
+                ctx.lineTo(canvas.width, i * gridSize);
+                ctx.stroke();
+            }
         }
 
         function drawSnake() {
-            ctx.fillStyle = "lightgreen";
-            ctx.strokeStyle = "darkgreen";
-            snake.forEach(part => {
-                ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
-                ctx.strokeRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
+            snake.forEach((part, index) => {
+                // Голова змеи чуть светлее тела
+                ctx.fillStyle = index === 0 ? "#66bb6a" : "#4caf50";
+                ctx.fillRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2);
             });
         }
 
@@ -79,7 +136,22 @@
 
             if (head.x === food.x && head.y === food.y) {
                 score += 10;
-                scoreElement.innerText = "Счёт: " + score;
+                scoreElement.innerText = score;
+                
+                // Проверка и обновление рекорда
+                if (score > highScore) {
+                    highScore = score;
+                    highScoreElement.innerText = highScore;
+                    localStorage.setItem("snakeHighScore", highScore);
+                }
+
+                // Повышение уровня каждые 50 очков (5 съеденных яблок)
+                let newLevel = Math.floor(score / 50) + 1;
+                if (newLevel !== level) {
+                    level = newLevel;
+                    levelElement.innerText = level;
+                }
+
                 generateFood();
             } else {
                 snake.pop();
@@ -90,53 +162,69 @@
             food.x = Math.floor(Math.random() * tileCount);
             food.y = Math.floor(Math.random() * tileCount);
             
-            // Чтобы еда не спавнилась внутри змейки
-            snake.forEach(part => {
-                if (part.x === food.x && part.y === food.y) generateFood();
-            });
+            // Чтобы еда не появилась внутри змейки
+            for (let part of snake) {
+                if (part.x === food.x && part.y === food.y) {
+                    generateFood();
+                    break;
+                }
+            }
         }
 
         function drawFood() {
-            ctx.fillStyle = "red";
-            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+            ctx.fillStyle = "#e91e63"; // Розовато-красное яблоко
+            ctx.beginPath();
+            let centerX = food.x * gridSize + gridSize/2;
+            let centerY = food.y * gridSize + gridSize/2;
+            ctx.arc(centerX, centerY, gridSize/2 - 2, 0, 2 * Math.PI);
+            ctx.fill();
         }
 
         function hasGameEnded() {
+            // Врезался в хвост
             for (let i = 4; i < snake.length; i++) {
                 if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
             }
+            // Врезался в стены
             const hitLeftWall = snake[0].x < 0;
             const hitRightWall = snake[0].x >= tileCount;
-            const hitToptWall = snake[0].y < 0;
+            const hitTopWall = snake[0].y < 0;
             const hitBottomWall = snake[0].y >= tileCount;
 
-            return hitLeftWall || hitRightWall || hitToptWall || hitBottomWall;
+            return hitLeftWall || hitRightWall || hitTopWall || hitBottomWall;
         }
 
         function changeDirection(event) {
+            if (isChangingDirection) return; // Защита от слишком быстрых нажатий
+
             const keyPressed = event.keyCode;
             const goingUp = dy === -1;
             const goingDown = dy === 1;
             const goingRight = dx === 1;
             const goingLeft = dx === -1;
 
-            if (keyPressed === 37 && !goingRight) { dx = -1; dy = 0; } // Влево
-            if (keyPressed === 38 && !goingDown) { dx = 0; dy = -1; } // Вверх
-            if (keyPressed === 39 && !goingLeft) { dx = 1; dy = 0; }  // Вправо
-            if (keyPressed === 40 && !goingUp) { dx = 0; dy = 1; }    // Вниз
+            if (keyPressed === 37 && !goingRight) { dx = -1; dy = 0; isChangingDirection = true; }
+            if (keyPressed === 38 && !goingDown) { dx = 0; dy = -1; isChangingDirection = true; }
+            if (keyPressed === 39 && !goingLeft) { dx = 1; dy = 0; isChangingDirection = true; }
+            if (keyPressed === 40 && !goingUp) { dx = 0; dy = 1; isChangingDirection = true; }
         }
 
         function resetGame() {
+            clearTimeout(gameTimeout);
             snake = [{x: 10, y: 10}];
             food = {x: 5, y: 5};
             dx = 1;
             dy = 0;
             score = 0;
-            scoreElement.innerText = "Счёт: " + score;
+            level = 1;
+            scoreElement.innerText = score;
+            levelElement.innerText = level;
+            main();
         }
 
         document.addEventListener("keydown", changeDirection);
-        gameInterval = setInterval(main, gameSpeed);
+        // Запуск игры
+        main();
     </script>
 </body>
 </html>
