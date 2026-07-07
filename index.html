@@ -2,329 +2,301 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Супер Змейка v2.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Игра Змейка</title>
     <style>
         body {
             background-color: #1a1a1a;
-            color: white;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             height: 100vh;
             margin: 0;
-            overflow: hidden;
         }
-        .stats-container {
-            display: flex;
-            justify-content: space-between;
-            width: 400px;
-            margin-bottom: 15px;
-            font-size: 20px;
-            font-weight: bold;
-            background: #2a2a2a;
-            padding: 10px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            box-sizing: border-box;
-        }
-        .stat-box span { color: #4caf50; }
-        #levelBox span { color: #00bcd4; }
-        #highScoreBox span { color: #ffeb3b; }
 
-        .game-container {
-            position: relative;
-            width: 412px;
-            height: 412px;
+        h1 {
+            margin-bottom: 10px;
         }
-        canvas {
-            border: 6px solid #333;
-            background-color: #111;
-            border-radius: 10px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        
-        .overlay {
-            position: absolute;
-            top: 6px;
-            left: 6px;
-            width: 400px;
-            height: 400px;
-            background: rgba(0, 0, 0, 0.9);
-            border-radius: 4px;
+
+        /* Экран меню */
+        #menu {
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            z-index: 10;
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
-        .overlay h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 32px;
-            color: #4caf50;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        .overlay button {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 12px 30px;
+
+        label {
             font-size: 18px;
-            font-weight: bold;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 4px 10px rgba(76, 175, 80, 0.4);
             margin-bottom: 10px;
         }
-        .overlay button:hover {
-            background: #45a049;
-            transform: scale(1.05);
-        }
-        #resetScoreBtn {
-            background: #333;
-            font-size: 12px;
-            padding: 6px 12px;
-            color: #aaa;
-            box-shadow: none;
-        }
-        #resetScoreBtn:hover {
-            background: #d32f2f;
-            color: white;
-        }
-        .slider-container {
-            margin-bottom: 25px;
-            text-align: center;
-            width: 80%;
-        }
-        .slider-container label {
-            display: block;
-            margin-bottom: 8px;
+
+        select {
+            padding: 10px;
             font-size: 16px;
-            color: #bbb;
-        }
-        .slider-container input {
-            width: 100%;
+            border-radius: 5px;
+            border: none;
+            margin-bottom: 20px;
+            background: #444;
+            color: white;
             cursor: pointer;
         }
 
-        .controls-hint {
-            margin-top: 15px;
-            color: #888;
-            font-size: 14px;
-            text-align: center;
-            line-height: 1.5;
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
         }
-        .hidden { display: none !important; }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Игровой интерфейс */
+        #game-container {
+            display: none; /* Скрыт по умолчанию */
+            position: relative;
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 400px;
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .score-box {
+            color: #4CAF50;
+        }
+
+        .highscore-box {
+            color: #ff9800;
+        }
+
+        canvas {
+            border: 4px solid #fff;
+            background-color: #000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
 
-    <div class="stats-container">
-        <div class="stat-box">Счёт: <span id="score">0</span></div>
-        <div class="stat-box" id="levelBox">Уровень: <span id="level">1</span></div>
-        <div class="stat-box" id="highScoreBox">Рекорд: <span id="highScore">0</span></div>
+    <div id="menu">
+        <h1>Змейка</h1>
+        <label for="speed-select">Выбери скорость:</label>
+        <select id="speed-select">
+            <option value="150">Новичок (Медленно)</option>
+            <option value="100" selected>Любитель (Нормально)</option>
+            <option value="60">Профи (Быстро)</option>
+            <option value="35">Киберспорт (Бешено)</option>
+        </select>
+        <button id="start-btn">Играть</button>
     </div>
 
-    <div class="game-container">
+    <div id="game-container">
+        <div class="hud">
+            <div class="score-box">Очки: <span id="score">0</span></div>
+            <div class="highscore-box">Рекорд: <span id="highscore">0</span></div>
+        </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
-        
-        <div id="mainMenu" class="overlay">
-            <h2>Змейка</h2>
-            <div class="slider-container">
-                <label id="speedLabel">Начальная скорость: Обычная (100%)</label>
-                <input type="range" id="speedSlider" min="1" max="5" value="3">
-            </div>
-            <button id="startBtn">Играть</button>
-            <button id="resetScoreBtn">Сбросить рекорд</button>
-        </div>
-
-        <div id="pauseMenu" class="overlay hidden">
-            <h2>Пауза</h2>
-            <button id="resumeBtn">Продолжить</button>
-        </div>
-    </div>
-    
-    <div class="controls-hint">
-        Управление: <b>Стрелочки</b><br>
-        Пауза / Старт: <b>Пробел</b>
     </div>
 
     <script>
         const canvas = document.getElementById("gameCanvas");
         const ctx = canvas.getContext("2d");
-        const scoreElement = document.getElementById("score");
-        const levelElement = document.getElementById("level");
-        const highScoreElement = document.getElementById("highScore");
-        
-        const mainMenu = document.getElementById("mainMenu");
-        const pauseMenu = document.getElementById("pauseMenu");
-        const startBtn = document.getElementById("startBtn");
-        const resumeBtn = document.getElementById("resumeBtn");
-        const resetScoreBtn = document.getElementById("resetScoreBtn");
-        const speedSlider = document.getElementById("speedSlider");
-        const speedLabel = document.getElementById("speedLabel");
 
-        const gridSize = 20;
+        // Элементы DOM
+        const menu = document.getElementById("menu");
+        const gameContainer = document.getElementById("game-container");
+        const startBtn = document.getElementById("start-btn");
+        const speedSelect = document.getElementById("speed-select");
+        const scoreTxt = document.getElementById("score");
+        const highscoreTxt = document.getElementById("highscore");
+
+        // Настройки сетки
+        const gridSize = 20; 
         const tileCount = canvas.width / gridSize;
 
-        let snake = [{x: 10, y: 10}];
-        let food = {x: 5, y: 5};
-        let dx = 1;
-        let dy = 0;
-        
+        // Игровые переменные
+        let snake = [];
+        let food = { x: 0, y: 0 };
+        let dx = gridSize; // Движение по X
+        let dy = 0;        // Движение по Y
         let score = 0;
-        let level = 1;
-        let highScore = localStorage.getItem("snakeHighScore") || 0;
-        highScoreElement.innerText = highScore;
+        let highscore = localStorage.getItem("snake_highscore") || 0;
+        let gameInterval;
+        let gameSpeed = 100;
+        let changingDirection = false; // Защита от быстрого нажатия клавиш
 
-        let baseSpeed = 120; 
-        let gameTimeout;
-        let isChangingDirection = false;
-        let isGameRunning = false;
-        let isPaused = false;
+        // Отображаем начальный рекорд из локального хранилища браузера
+        highscoreTxt.textContent = highscore;
 
-        const speedNames = {
-            1: "Очень медленная (50%)",
-            2: "Медленная (75%)",
-            3: "Обычная (100%)",
-            4: "Быстрая (125%)",
-            5: "Хардкор (150%)"
-        };
-        const speedValues = { 1: 200, 2: 150, 3: 120, 4: 90, 5: 60 };
-
-        speedSlider.addEventListener("input", () => {
-            speedLabel.innerText = `Начальная скорость: ${speedNames[speedSlider.value]}`;
-            baseSpeed = speedValues[speedSlider.value];
+        // Кнопка старта
+        startBtn.addEventListener("click", () => {
+            gameSpeed = parseInt(speedSelect.value);
+            menu.style.display = "none";
+            gameContainer.style.display = "block";
+            resetGame();
         });
 
-        resetScoreBtn.addEventListener("click", () => {
-            if(confirm("Реально сбросить рекорд?")) {
-                localStorage.removeItem("snakeHighScore");
-                highScore = 0;
-                highScoreElement.innerText = 0;
-            }
-        });
+        // Сброс и запуск игры
+        function resetGame() {
+            snake = [
+                { x: gridSize * 5, y: gridSize * 5 },
+                { x: gridSize * 4, y: gridSize * 5 },
+                { x: gridSize * 3, y: gridSize * 5 }
+            ];
+            dx = gridSize;
+            dy = 0;
+            score = 0;
+            scoreTxt.textContent = score;
+            changingDirection = false;
+            createFood();
+            
+            clearInterval(gameInterval);
+            gameInterval = setInterval(gameLoop, gameSpeed);
+        }
 
-        function main() {
-            if (!isGameRunning || isPaused) return;
-
+        // Главный цикл игры
+        function gameLoop() {
             if (hasGameEnded()) {
-                alert(`Игра окончена!\nТвой счёт: ${score}\nУровень: ${level}`);
-                resetGame();
+                alert(`Игра окончена! Вы набрали: ${score} очков.`);
+                clearInterval(gameInterval);
+                gameContainer.style.display = "none";
+                menu.style.display = "flex";
                 return;
             }
 
-            isChangingDirection = false;
+            changingDirection = false;
             clearCanvas();
             drawFood();
             moveSnake();
             drawSnake();
-
-            let currentSpeed = Math.max(30, baseSpeed - (level - 1) * 8);
-            gameTimeout = setTimeout(main, currentSpeed);
         }
 
+        // Очистка поля
         function clearCanvas() {
-            ctx.fillStyle = "#111";
+            ctx.fillStyle = "#000";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.strokeStyle = "#1a1a1a";
-            ctx.lineWidth = 1;
-            for (let i = 0; i < tileCount; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * gridSize, 0);
-                ctx.lineTo(i * gridSize, canvas.height);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0, i * gridSize);
-                ctx.lineTo(canvas.width, i * gridSize);
-                ctx.stroke();
-            }
         }
 
+        // Рисуем змейку
         function drawSnake() {
             snake.forEach((part, index) => {
-                ctx.fillStyle = index === 0 ? "#66bb6a" : "#4caf50";
-                ctx.fillRect(part.x * gridSize + 1, part.y * gridSize + 1, gridSize - 2, gridSize - 2);
+                // Голова чуть светлее тела
+                ctx.fillStyle = index === 0 ? "#66bb6a" : "#4CAF50";
+                ctx.fillRect(part.x, part.y, gridSize - 2, gridSize - 2); // -2 для сетчатого эффекта
             });
         }
 
+        // Движение змейки
         function moveSnake() {
-            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
-            if (head.x === food.x && head.y === food.y) {
-                score += 1;
-                scoreElement.innerText = score;
+            // Проверка: съела ли еду?
+            if (snake[0].x === food.x && snake[0].y === food.y) {
+                score += 10;
+                scoreTxt.textContent = score;
                 
-                if (score > highScore) {
-                    highScore = score;
-                    highScoreElement.innerText = highScore;
-                    localStorage.setItem("snakeHighScore", highScore);
+                // Проверка рекорда на ходу
+                if (score > highscore) {
+                    highscore = score;
+                    highscoreTxt.textContent = highscore;
+                    localStorage.setItem("snake_highscore", highscore);
                 }
-
-                let newLevel = Math.floor(score / 5) + 1;
-                if (newLevel !== level) {
-                    level = newLevel;
-                    levelElement.innerText = level;
-                }
-
-                generateFood();
+                createFood();
             } else {
-                snake.pop();
+                snake.pop(); // Удаляем хвост, если еду не ели
             }
         }
 
-        function generateFood() {
-            food.x = Math.floor(Math.random() * tileCount);
-            food.y = Math.floor(Math.random() * tileCount);
-            for (let part of snake) {
+        // Спавн еды
+        function createFood() {
+            food.x = Math.floor(Math.random() * tileCount) * gridSize;
+            food.y = Math.floor(Math.random() * tileCount) * gridSize;
+
+            // Чтобы еда не заспавнилась внутри змейки
+            snake.forEach(part => {
                 if (part.x === food.x && part.y === food.y) {
-                    generateFood();
-                    break;
+                    createFood();
                 }
-            }
+            });
         }
 
+        // Рисуем еду
         function drawFood() {
-            ctx.fillStyle = "#e91e63";
-            ctx.beginPath();
-            let centerX = food.x * gridSize + gridSize/2;
-            let centerY = food.y * gridSize + gridSize/2;
-            ctx.arc(centerX, centerY, gridSize/2 - 2, 0, 2 * Math.PI);
-            ctx.fill();
+            ctx.fillStyle = "#ff4444";
+            ctx.fillRect(food.x, food.y, gridSize - 2, gridSize - 2);
         }
 
+        // Проверка столкновений
         function hasGameEnded() {
+            // Столкновение со стенами
+            if (snake[0].x < 0 || snake[0].x >= canvas.width || snake[0].y < 0 || snake[0].y >= canvas.height) {
+                return true;
+            }
+            // Столкновение с хвостиком
             for (let i = 4; i < snake.length; i++) {
                 if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
             }
-            return snake[0].x < 0 || snake[0].x >= tileCount || snake[0].y < 0 || snake[0].y >= tileCount;
+            return false;
         }
+
+        // Управление стрелочками и WASD
+        document.addEventListener("keydown", changeDirection);
 
         function changeDirection(event) {
             const keyPressed = event.keyCode;
+            
+            // Коды клавиш: Стрелочки и WASD
+            const LEFT = 37,  A = 65;
+            const UP = 38,    W = 87;
+            const RIGHT = 39, D = 68;
+            const DOWN = 40,  S = 83;
 
-            if (keyPressed === 32) {
-                event.preventDefault();
-                if (isGameRunning) togglePause();
-                return;
+            if (changingDirection) return;
+
+            const goingUp = dy === -gridSize;
+            const goingDown = dy === gridSize;
+            const goingRight = dx === gridSize;
+            const goingLeft = dx === -gridSize;
+
+            if ((keyPressed === LEFT || keyPressed === A) && !goingRight) {
+                dx = -gridSize;
+                dy = 0;
+                changingDirection = true;
             }
-
-            if (isChangingDirection || !isGameRunning || isPaused) return;
-
-            const goingUp = dy === -1;
-            const goingDown = dy === 1;
-            const goingRight = dx === 1;
-            const goingLeft = dx === -1;
-
-            if (keyPressed === 37 && !goingRight) { dx = -1; dy = 0; isChangingDirection = true; }
-            if (keyPressed === 38 && !goingDown) { dx = 0; dy = -1; isChangingDirection = true; }
-            if (keyPressed === 39 && !goingLeft) { dx = 1; dy = 0; is
+            if ((keyPressed === UP || keyPressed === W) && !goingDown) {
+                dx = 0;
+                dy = -gridSize;
+                changingDirection = true;
+            }
+            if ((keyPressed === RIGHT || keyPressed === D) && !goingLeft) {
+                dx = gridSize;
+                dy = 0;
+                changingDirection = true;
+            }
+            if ((keyPressed === DOWN || keyPressed === S) && !goingUp) {
+                dx = 0;
+                dy = gridSize;
+                changingDirection = true;
+            }
+        }
+    </script>
+</body>
+</html>
