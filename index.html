@@ -1,1 +1,663 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseVisuals - Лучший мод для Minecraft</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1a3e 50%, #0d0d1f 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Анимированный фон */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(75, 0, 130, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Парящие частицы */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+        }
+
+        header {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+            font-weight: bold;
+            gap: 10px;
+        }
+
+        .logo::before {
+            content: '⚡';
+            color: #8a2be2;
+        }
+
+        nav {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        nav a {
+            color: #a0a0a0;
+            text-decoration: none;
+            transition: color 0.3s;
+            font-size: 14px;
+        }
+
+        nav a:hover {
+            color: #8a2be2;
+        }
+
+        .login-btn {
+            background: linear-gradient(135deg, #8a2be2, #5a2f9a);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            color: #8a2be2;
+        }
+
+        /* Основной контент */
+        .container {
+            position: relative;
+            z-index: 5;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 100px 50px 80px;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, #a0a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: #a0a0a0;
+            max-width: 700px;
+            margin: 0 auto 50px;
+            line-height: 1.6;
+        }
+
+        .pricing-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 100px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(75, 0, 130, 0.05));
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(138, 43, 226, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover {
+            border-color: rgba(138, 43, 226, 0.6);
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(138, 43, 226, 0.2);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .card h3 {
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .card-price {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: #8a2be2;
+        }
+
+        .card-price span {
+            font-size: 18px;
+            color: #a0a0a0;
+        }
+
+        .card p {
+            color: #a0a0a0;
+            font-size: 14px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .card-btn {
+            background: linear-gradient(135deg, #8a2be2, #5a2f9a);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .card-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
+        }
+
+        /* Секция модификаций */
+        .mods-section {
+            padding: 100px 50px;
+            text-align: center;
+        }
+
+        .mods-section h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff, #a0a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mods-description {
+            color: #a0a0a0;
+            max-width: 900px;
+            margin: 0 auto 60px;
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        .mods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 100px;
+        }
+
+        .mod-item {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(75, 0, 130, 0.05));
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .mod-item:hover {
+            border-color: rgba(138, 43, 226, 0.6);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(138, 43, 226, 0.2);
+        }
+
+        .mod-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .mod-item h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .mod-item p {
+            color: #a0a0a0;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* Секция геймплея */
+        .gameplay-section {
+            padding: 100px 50px;
+            text-align: center;
+        }
+
+        .gameplay-section h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff, #a0a0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .gameplay-description {
+            color: #a0a0a0;
+            max-width: 800px;
+            margin: 0 auto 60px;
+            font-size: 16px;
+        }
+
+        .gameplay-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            margin-bottom: 100px;
+        }
+
+        .gameplay-image {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(75, 0, 130, 0.1));
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 100px;
+        }
+
+        .gameplay-controls {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(75, 0, 130, 0.05));
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .control-group label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #a0a0a0;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 24px;
+            background: #5a2f9a;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #8a2be2;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 28px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: #5a2f9a;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #8a2be2;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #8a2be2;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #a0a0a0;
+            border-top: 1px solid rgba(138, 43, 226, 0.2);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .hero {
+                padding: 60px 20px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .gameplay-container {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-cards {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles"></div>
+
+    <header>
+        <div class="logo">PulseVisuals</div>
+        <nav>
+            <a href="#main">Главная</a>
+            <a href="#features">Функции</a>
+            <a href="#tariffs">Тарифы</a>
+            <a href="#reviews">Видеообзоры</a>
+        </nav>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            <button class="login-btn">Логин</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Главная секция -->
+        <section class="hero" id="main">
+            <h1>Ваш идеальный тариф здесь</h1>
+            <p>Несколько вариантов подписки, чтобы вы платили только за то, что действительно нужно.</p>
+            
+            <div class="pricing-cards">
+                <div class="card">
+                    <div class="card-icon">📦</div>
+                    <h3>30 дней</h3>
+                    <div class="card-price">30<span>дн</span></div>
+                    <p>Пробуем этот тариф, вы получаете 30-дневный доступ к помощи функционалу PulseVisuals.</p>
+                    <button class="card-btn">Попробовать</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">⭐</div>
+                    <h3>90 дней</h3>
+                    <div class="card-price">90<span>дн</span></div>
+                    <p>Вместе с этим тарифом вы откроете себе покупаю полного доступа к PulseVisuals.</p>
+                    <button class="card-btn">Попробовать</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-icon">♾️</div>
+                    <h3>Навсегда</h3>
+                    <div class="card-price">∞</div>
+                    <p>Максимум возможностей! PulseVisuals — навсегда, без ограничений и срокам.</p>
+                    <button class="card-btn">Попробовать</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция модификаций -->
+        <section class="mods-section" id="features">
+            <h2>Лучший мод для комфортной игры в Minecraft</h2>
+            <p class="mods-description">
+                Pulse создан для тех, кто ценит стиль, удобство и максимальную производительность. Полезный геймплей, процессивный интерфейс и стабильную работу дают вам реальное преимущество в игре.
+            </p>
+
+            <div class="mods-grid">
+                <div class="mod-item">
+                    <div class="mod-icon">🎨</div>
+                    <h3>Дизайн</h3>
+                    <p>Наслаждайтесь ролью с элегантными минималистичными интерфейсом.</p>
+                </div>
+                <div class="mod-item">
+                    <div class="mod-icon">⚡</div>
+                    <h3>Производительность</h3>
+                    <p>Оптимизированный код позволяет достичь высокого FPS даже на слабых компьютерах.</p>
+                </div>
+                <div class="mod-item">
+                    <div class="mod-icon">🎮</div>
+                    <h3>PvP преимущества</h3>
+                    <p>Получите преимущество в бое с помощью специальных настроек и функций для PvP.</p>
+                </div>
+                <div class="mod-item">
+                    <div class="mod-icon">🔧</div>
+                    <h3>Гибкие настройки</h3>
+                    <p>Настройте мод под себя с помощью параметров и опций с удобным интерфейсом.</p>
+                </div>
+                <div class="mod-item">
+                    <div class="mod-icon">🛡️</div>
+                    <h3>Анти-чит</h3>
+                    <p>Наш мод полностью совместим с популярными анти-чит системами на серверах.</p>
+                </div>
+                <div class="mod-item">
+                    <div class="mod-icon">📊</div>
+                    <h3>Регулярные обновления</h3>
+                    <p>Мы постоянно улучшаем и обновляем мод, добавляя новые функции.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Секция геймплея -->
+        <section class="gameplay-section" id="reviews">
+            <h2>Играй по-своему</h2>
+            <p class="gameplay-description">
+                Выбирай специл HD-дизайн клиента или моячный классический Minecraft. Решение за тобой — всегда.
+            </p>
+
+            <div class="gameplay-container">
+                <div class="gameplay-image">🌳</div>
+                <div class="gameplay-controls">
+                    <h3 style="margin-bottom: 25px; text-align: center;">Visuals</h3>
+                    
+                    <div class="control-group">
+                        <label>
+                            <span>Aspect Ratio</span>
+                        </label>
+                        <input type="range" class="slider" min="0" max="100" value="50">
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <span>China Hit</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <span>Crosshair</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <span>Full Bright</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <span>Particles</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </label>
+                    </div>
+
+                    <div class="control-group">
+                        <label>
+                            <span>Hit Color</span>
+                        </label>
+                        <input type="range" class="slider" min="0" max="100" value="75">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 PulseVisuals - Лучший мод для Minecraft. Все права защищены.</p>
+    </footer>
+
+    <script>
+        // Создание парящих частиц
+        function createParticles() {
+            const particlesContainer = document.querySelector('.particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 25) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        // Переключение темы
+        function toggleTheme() {
+            document.body.style.filter = document.body.style.filter === 'invert(1)' ? 'none' : 'invert(1)';
+        }
+
+        // Плавная прокрутка
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
